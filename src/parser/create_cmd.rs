@@ -3,15 +3,15 @@ use std::{
     io::{self, stdin},
 };
 
-use crate::task_parser::cmd::{Cmd, TaskManager};
+use crate::{parser::cmd::Cmd, storage::repository::TaskRepository};
 
-pub struct CreateTask {
+pub struct CreateCmd {
     title: String,
-    _description: String,
+    description: String,
 }
 
-impl Cmd for CreateTask {
-    fn execute(&mut self, _task_manager: &mut TaskManager) -> bool {
+impl Cmd for CreateCmd {
+    fn execute(&mut self, repo: &mut dyn TaskRepository) -> bool {
         true
     }
 
@@ -20,7 +20,7 @@ impl Cmd for CreateTask {
     }
 
     fn get_description(&mut self) -> String {
-        self._description.clone()
+        self.description.clone()
     }
 }
 
@@ -41,9 +41,9 @@ pub fn process_task_create() -> Result<Box<dyn Cmd>, Box<dyn Error + Sync + Send
             "title is empty",
         )))
     } else {
-        Ok(Box::new(CreateTask {
+        Ok(Box::new(CreateCmd {
             title: title,
-            _description: description,
+            description: description,
         }))
     }
 }

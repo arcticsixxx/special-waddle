@@ -3,14 +3,15 @@ use std::{
     io::{self, stdin},
 };
 
-use crate::task_parser::cmd::{Cmd, TaskManager};
+use crate::{parser::cmd::Cmd, storage::repository::TaskRepository};
 
-pub struct DeleteTask {
+pub struct DeleteCmd {
     id: u64,
 }
 
-impl Cmd for DeleteTask {
-    fn execute(&mut self, _task_manager: &mut TaskManager) -> bool {
+impl Cmd for DeleteCmd {
+    fn execute(&mut self, repo: &mut dyn TaskRepository) -> bool {
+        repo.test();
         true
     }
 
@@ -35,7 +36,7 @@ pub fn process_task_delete() -> Result<Box<dyn Cmd>, Box<dyn Error + Sync + Send
             "id is empty",
         )))
     } else {
-        Ok(Box::new(DeleteTask {
+        Ok(Box::new(DeleteCmd {
             id: input.trim().parse::<u64>()?,
         }))
     }
