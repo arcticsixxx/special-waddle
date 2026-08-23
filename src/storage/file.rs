@@ -1,23 +1,24 @@
 use std::fs;
+use std::path::PathBuf;
 
 use crate::domain::Task;
 use crate::storage::repository::TaskRepository;
 
-// use std::path::PathBuf;
 use serde_json::json;
 
 pub struct FileTaskRepository {
-    pub path: String, // PathBuf and private
+    path: PathBuf,
 }
 
-// impl FileTaskRepository {
-//     pub fn new( ) {
-//     }
-// }
+impl FileTaskRepository {
+    pub fn new(path: PathBuf) -> Self {
+        Self { path: path }
+    }
+}
 
 impl TaskRepository for FileTaskRepository {
     fn save(&mut self, task: &Task) {
-        let task_js= json!({
+        let task_js = json!({
             "id": task.id,
             "title": task.title,
             "description": task.description,
@@ -26,11 +27,9 @@ impl TaskRepository for FileTaskRepository {
         let json = task_js.to_string();
 
         fs::write(&self.path, json).unwrap();
+    }
 
-        // "name": full_name,
-        // "age": age_last_year + 1,
-        // "phones": [
-        //     format!("+44 {}", random_phone())
-        // ]
+    fn test(&mut self) {
+        println!("invoked")
     }
 }

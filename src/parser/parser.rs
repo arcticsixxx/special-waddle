@@ -3,9 +3,7 @@ use std::{
     io::{self},
 };
 
-use crate::task_parser::{
-    cmd::Cmd, create_cmd::process_task_create, delete_cmd::process_task_delete,
-};
+use crate::parser::{cmd::Cmd, create_cmd::process_task_create, delete_cmd::process_task_delete};
 
 pub fn input() -> Result<Box<dyn Cmd>, Box<dyn Error + Sync + Send>> {
     use std::io::stdin;

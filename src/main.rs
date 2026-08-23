@@ -1,6 +1,12 @@
-mod task_parser;
+mod domain;
+mod parser;
+mod storage;
+
+use std::path::PathBuf;
 
 use tokio::sync::mpsc;
+
+use crate::storage::file::FileTaskRepository;
 
 #[tokio::main]
 async fn main() {
@@ -8,8 +14,7 @@ async fn main() {
 
     tokio::spawn(async move {
         loop {
-            let res = task_parser::parser::input();
-            match res {
+            match parser::parser::input() {
                 Ok(cmd) => tx.send(cmd).await.unwrap(),
                 Err(e) => println!("Error occured {}", e),
             }
@@ -17,10 +22,8 @@ async fn main() {
     });
 
     while let Some(mut cmd) = rx.recv().await {
-        println!(
-            "Task {} created with description: {}",
-            cmd.get_title(),
-            cmd.get_description()
-        )
+        let mut file_repo = FileTaskRepository::new(PathBuf::from("/tmp/xyz"));
+
+        cmd.execute(&mut file_repo);
     }
 }
