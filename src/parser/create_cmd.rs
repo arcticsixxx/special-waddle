@@ -3,7 +3,7 @@ use std::{error::Error, io::stdin};
 use crate::{
     app::task_service::{TaskService, TaskServiceError},
     parser::cmd::Cmd,
-    storage::repository::TaskRepository,
+    storage::app_repository::AppRepository,
 };
 
 pub struct CreateCmd {
@@ -11,7 +11,7 @@ pub struct CreateCmd {
     pub description: String,
 }
 
-impl<R: TaskRepository> Cmd<R> for CreateCmd {
+impl<R: AppRepository> Cmd<R> for CreateCmd {
     fn execute(self: Box<Self>, service: &mut TaskService<R>) -> Result<(), TaskServiceError> {
         service.create_task(self.title, self.description)?;
 

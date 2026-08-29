@@ -1,7 +1,8 @@
 use thiserror::Error;
 
-use crate::domain::Task;
-use crate::storage::repository::{RepositoryError, TaskRepository};
+use crate::domain::{Task, TaskStatus};
+use crate::storage::app_repository::AppRepository;
+use crate::storage::error::RepositoryError;
 
 #[derive(Debug, Error)]
 pub enum TaskServiceError {
@@ -13,12 +14,12 @@ pub enum TaskServiceError {
     RepositoryError(#[from] RepositoryError),
 }
 
-pub struct TaskService<R: TaskRepository> {
+pub struct TaskService<R: AppRepository> {
     repo: R,
     next_id: u64,
 }
 
-impl<R: TaskRepository> TaskService<R> {
+impl<R: AppRepository> TaskService<R> {
     pub fn new(repo: R) -> Result<Self, TaskServiceError> {
         let next_id = repo.get_all()?.iter().map(|t| t.id).max().unwrap_or(0) + 1;
 
@@ -36,8 +37,9 @@ impl<R: TaskRepository> TaskService<R> {
 
         let task = Task {
             id: self.next_id,
-            title,
-            description,
+            title: title,
+            description: description,
+            status: TaskStatus::Todo,
         };
 
         self.repo.save(&task)?;
@@ -58,5 +60,40 @@ impl<R: TaskRepository> TaskService<R> {
 
     pub fn get_task(&self, id: u64) -> Result<Task, TaskServiceError> {
         self.repo.get(id)?.ok_or(TaskServiceError::TaskNotFound)
+    }
+
+    pub fn toggle_done(&mut self, id: u64) -> Result<(), TaskServiceError> {
+        let mut task = self.get_task(id)?;
+
+        task.status = match task.status {
+            TaskStatus::Todo => TaskStatus::Done,
+            TaskStatus::Done => TaskStatus::Todo,
+        };
+
+        self.repo.save(&task)?;
+
+        Ok(())
+    }
+
+    pub fn start_working(&mut self, id: u64) -> Result<(), TaskServiceError> {
+        self.get_task(id)?;
+
+        self.repo.set_active_task(Some(id))?;
+
+        Ok(())
+    }
+
+    pub fn stop_working(&mut self) -> Result<(), TaskServiceError> {
+        self.repo.set_active_task(None)?;
+
+        Ok(())
+    }
+
+    pub fn active_task(&self) -> Result<Option<Task>, TaskServiceError> {
+        let Some(id) = self.repo.active_task_id()? else {
+            return Ok(None);
+        };
+
+        Ok(Some(self.get_task(id)?))
     }
 }
