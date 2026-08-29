@@ -1,13 +1,17 @@
+use thiserror::Error;
+
 use crate::domain::Task;
 
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RepositoryError {
-    Unavailable, 
+    #[error("repository not available")]
+    Unavailable,
+    #[error("data corrupted")]
     Corrupted,
-    Internal
+    #[error("internal repository error")]
+    Internal,
 }
-    
+
 pub trait TaskRepository {
     fn save(&mut self, task: &Task) -> Result<(), RepositoryError>;
 
@@ -17,4 +21,3 @@ pub trait TaskRepository {
 
     fn delete(&self, id: u64) -> Result<(), RepositoryError>;
 }
-
