@@ -19,5 +19,5 @@ pub trait TaskRepository {
 
     fn get_all(&self) -> Result<Vec<Task>, RepositoryError>;
 
-    fn delete(&self, id: u64) -> Result<(), RepositoryError>;
+    fn delete(&mut self, id: u64) -> Result<(), RepositoryError>;
 }

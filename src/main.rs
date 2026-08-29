@@ -1,5 +1,4 @@
-use special_waddle::{app, domain, parser, storage};
-use std::path::PathBuf;
+use special_waddle::{app, parser, storage};
 
 use tokio::sync::mpsc;
 
@@ -16,11 +15,11 @@ async fn main() {
         }
     });
 
-    let mut file_repo = storage::file::FileTaskRepository::new("storage.json");
+    let file_repo = storage::file::FileTaskRepository::new("storage.json");
     let mut service =
         app::task_service::TaskService::new(file_repo).expect("Failed to create task service");
 
-    while let Some(mut cmd) = rx.recv().await {
+    while let Some(cmd) = rx.recv().await {
         if let Err(e) = cmd.execute(&mut service) {
             println!("Command failed: {}", e);
         }

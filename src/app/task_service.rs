@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::domain::Task;
+use crate::domain::{Task, TaskStatus};
 use crate::storage::repository::{RepositoryError, TaskRepository};
 
 #[derive(Debug, Error)]
@@ -36,8 +36,9 @@ impl<R: TaskRepository> TaskService<R> {
 
         let task = Task {
             id: self.next_id,
-            title,
-            description,
+            title: title,
+            description: description,
+            status: TaskStatus::Todo,
         };
 
         self.repo.save(&task)?;
@@ -58,5 +59,18 @@ impl<R: TaskRepository> TaskService<R> {
 
     pub fn get_task(&self, id: u64) -> Result<Task, TaskServiceError> {
         self.repo.get(id)?.ok_or(TaskServiceError::TaskNotFound)
+    }
+
+    pub fn toggle_done(&mut self, id: u64) -> Result<(), TaskServiceError> {
+        let mut task = self.get_task(id)?;
+
+        task.status = match task.status {
+            TaskStatus::Todo => TaskStatus::Done,
+            TaskStatus::Done => TaskStatus::Todo,
+        };
+
+        self.repo.save(&task)?;
+
+        Ok(())
     }
 }

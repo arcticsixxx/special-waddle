@@ -83,7 +83,7 @@ impl TaskRepository for FileTaskRepository {
         Ok(self.load_tasks()?)
     }
 
-    fn delete(&self, id: u64) -> Result<(), RepositoryError> {
+    fn delete(&mut self, id: u64) -> Result<(), RepositoryError> {
         let mut tasks = self.load_tasks()?;
 
         tasks.retain(|t| t.id != id);
