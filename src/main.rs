@@ -1,4 +1,8 @@
-use special_waddle::{app, parser, storage};
+use special_waddle::{
+    app,
+    parser::{self, handler},
+    storage,
+};
 
 use tokio::sync::mpsc;
 
@@ -19,9 +23,7 @@ async fn main() {
         }
     });
 
-    while let Some(cmd) = rx.recv().await {
-        if let Err(e) = cmd.execute(&mut service) {
-            println!("Command failed: {}", e);
-        }
+    while let Some(action) = rx.recv().await {
+        handler::handle_cli(action, &mut service);
     }
 }

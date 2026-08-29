@@ -1,45 +1,65 @@
-use std::{
-    error::Error,
-    io::{self},
-};
+use std::{error::Error, io};
 
 use crate::{
     parser::{
-        cmd::Cmd, create_cmd::process_task_create, delete_cmd::process_task_delete,
-        list_cmd::process_task_list, toggle_done_cmd::process_task_toggle,
+        active_cmd::{process_task_start, process_task_stop},
+        cmd::Cmd,
+        create_cmd::process_task_create,
+        delete_cmd::process_task_delete,
+        toggle_done_cmd::process_task_toggle,
     },
-    storage::repository::TaskRepository,
+    storage::app_repository::AppRepository,
 };
 
-pub fn input<R>() -> Result<Box<dyn Cmd<R>>, Box<dyn Error + Sync + Send>>
+pub enum CliAction<R: AppRepository> {
+    Command(Box<dyn Cmd<R> + Send>),
+    Query(CliQuery),
+}
+
+pub enum CliQuery {
+    List,
+    Active,
+}
+
+pub fn input<R>() -> Result<CliAction<R>, Box<dyn Error + Sync + Send>>
 where
-    R: TaskRepository,
+    R: AppRepository,
 {
     use std::io::stdin;
     let mut input = String::new();
 
-    stdin().read_line(&mut input).expect("No input");
+    stdin().read_line(&mut input)?;
+
     match input {
         _ if input.contains("task create") => {
-            let cmd = process_task_create()?;
-            Ok(Box::new(cmd))
+            let task = process_task_create()?;
+            Ok(CliAction::Command(Box::new(task)))
         }
 
         _ if input.contains("task delete") => {
-            let cmd = process_task_delete()?;
-            Ok(Box::new(cmd))
+            let task = process_task_delete()?;
+            Ok(CliAction::Command(Box::new(task)))
         }
 
         _ if input.contains("task toggle") => {
-            let cmd = process_task_toggle()?;
-            Ok(Box::new(cmd))
+            let task = process_task_toggle()?;
+            Ok(CliAction::Command(Box::new(task)))
+        }
+        _ if input.contains("task start") => {
+            let task = process_task_start()?;
+            Ok(CliAction::Command(Box::new(task)))
+        }
+        _ if input.contains("task stop") => {
+            let task = process_task_stop()?;
+            Ok(CliAction::Command(Box::new(task)))
         }
 
-        _ if input.contains("task list") => Ok(Box::new(process_task_list())),
+        _ if input.contains("task list") => Ok(CliAction::Query(CliQuery::List)),
+        _ if input.contains("task active") => Ok(CliAction::Query(CliQuery::Active)),
 
         _ => Err(Box::new(io::Error::new(
             io::ErrorKind::Other,
-            "unknown cmd",
+            "unknown command",
         ))),
     }
 }
