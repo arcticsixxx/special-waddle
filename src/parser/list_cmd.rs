@@ -12,8 +12,8 @@ impl<R: TaskRepository> Cmd<R> for ListCmd {
 
         for task in tasks {
             println!(
-                "id: {}\ntitle: {}\ndescription: {}\n",
-                task.id, task.title, task.description
+                "\nid: {}\ntitle: {}\ndescription: {}\nstatus: {:?}\n",
+                task.id, task.title, task.description, task.status
             )
         }
 

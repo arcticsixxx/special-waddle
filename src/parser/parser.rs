@@ -6,7 +6,7 @@ use std::{
 use crate::{
     parser::{
         cmd::Cmd, create_cmd::process_task_create, delete_cmd::process_task_delete,
-        list_cmd::process_task_list,
+        list_cmd::process_task_list, toggle_done_cmd::process_task_toggle,
     },
     storage::repository::TaskRepository,
 };
@@ -27,6 +27,11 @@ where
 
         _ if input.contains("task delete") => {
             let cmd = process_task_delete()?;
+            Ok(Box::new(cmd))
+        }
+
+        _ if input.contains("task toggle") => {
+            let cmd = process_task_toggle()?;
             Ok(Box::new(cmd))
         }
 
