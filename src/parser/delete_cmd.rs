@@ -1,43 +1,28 @@
-use std::{
-    error::Error,
-    io::{self, stdin},
+use std::{error::Error, io::stdin};
+
+use crate::{
+    app::task_service::{TaskService, TaskServiceError},
+    parser::cmd::Cmd,
+    storage::repository::TaskRepository,
 };
 
-use crate::{parser::cmd::Cmd, storage::repository::TaskRepository};
-
 pub struct DeleteCmd {
-    id: u64,
+    pub id: u64,
 }
 
-impl Cmd for DeleteCmd {
-    fn execute(&mut self, repo: &mut dyn TaskRepository) -> bool {
-        repo.test();
-        true
-    }
-
-    fn get_title(&mut self) -> String {
-        String::new()
-    }
-
-    fn get_description(&mut self) -> String {
-        String::new()
+impl<R: TaskRepository> Cmd<R> for DeleteCmd {
+    fn execute(self: Box<Self>, service: &mut TaskService<R>) -> Result<(), TaskServiceError> {
+        service.delete_task(self.id)
     }
 }
 
-pub fn process_task_delete() -> Result<Box<dyn Cmd>, Box<dyn Error + Sync + Send>> {
+pub fn process_task_delete() -> Result<DeleteCmd, Box<dyn Error + Sync + Send>> {
     let mut input = String::new();
 
     println!("Enter task id to delete:");
-    stdin().read_line(&mut input).expect("");
+    stdin().read_line(&mut input)?;
 
-    if input.is_empty() || input == "\n" {
-        Err(Box::new(io::Error::new(
-            io::ErrorKind::Other,
-            "id is empty",
-        )))
-    } else {
-        Ok(Box::new(DeleteCmd {
-            id: input.trim().parse::<u64>()?,
-        }))
-    }
+    Ok(DeleteCmd {
+        id: input.trim().parse::<u64>()?,
+    })
 }

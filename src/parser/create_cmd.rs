@@ -1,49 +1,37 @@
-use std::{
-    error::Error,
-    io::{self, stdin},
+use std::{error::Error, io::stdin};
+
+use crate::{
+    app::task_service::{TaskService, TaskServiceError},
+    parser::cmd::Cmd,
+    storage::repository::TaskRepository,
 };
 
-use crate::{parser::cmd::Cmd, storage::repository::TaskRepository};
-
 pub struct CreateCmd {
-    title: String,
-    description: String,
+    pub title: String,
+    pub description: String,
 }
 
-impl Cmd for CreateCmd {
-    fn execute(&mut self, repo: &mut dyn TaskRepository) -> bool {
-        true
-    }
+impl<R: TaskRepository> Cmd<R> for CreateCmd {
+    fn execute(self: Box<Self>, service: &mut TaskService<R>) -> Result<(), TaskServiceError> {
+        service.create_task(self.title, self.description)?;
 
-    fn get_title(&mut self) -> String {
-        self.title.clone()
-    }
-
-    fn get_description(&mut self) -> String {
-        self.description.clone()
+        Ok(())
     }
 }
 
-pub fn process_task_create() -> Result<Box<dyn Cmd>, Box<dyn Error + Sync + Send>> {
+pub fn process_task_create() -> Result<CreateCmd, Box<dyn Error + Sync + Send>> {
     let mut title = String::new();
     println!("Input task title:");
 
-    stdin().read_line(&mut title).expect("Failed to read");
+    stdin().read_line(&mut title)?;
 
     let mut description = String::new();
     println!("Input task description:");
 
-    stdin().read_line(&mut description).expect("Failed to read");
+    stdin().read_line(&mut description)?;
 
-    if title.is_empty() || title == "\n" {
-        Err(Box::new(io::Error::new(
-            io::ErrorKind::Other,
-            "title is empty",
-        )))
-    } else {
-        Ok(Box::new(CreateCmd {
-            title: title,
-            description: description,
-        }))
-    }
+    Ok(CreateCmd {
+        title: title.trim().to_string(),
+        description: description.trim().to_string(),
+    })
 }
