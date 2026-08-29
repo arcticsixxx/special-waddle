@@ -1,12 +1,12 @@
 use std::{error::Error, io::stdin};
 
-use crate::{parser::cmd::Cmd, storage::repository::TaskRepository};
+use crate::{parser::cmd::Cmd, storage::app_repository::AppRepository};
 
 pub struct ToggleDoneCmd {
     pub id: u64,
 }
 
-impl<R: TaskRepository> Cmd<R> for ToggleDoneCmd {
+impl<R: AppRepository> Cmd<R> for ToggleDoneCmd {
     fn execute(
         self: Box<Self>,
         service: &mut crate::app::task_service::TaskService<R>,
