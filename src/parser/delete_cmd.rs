@@ -3,14 +3,14 @@ use std::{error::Error, io::stdin};
 use crate::{
     app::task_service::{TaskService, TaskServiceError},
     parser::cmd::Cmd,
-    storage::repository::TaskRepository,
+    storage::app_repository::AppRepository,
 };
 
 pub struct DeleteCmd {
     pub id: u64,
 }
 
-impl<R: TaskRepository> Cmd<R> for DeleteCmd {
+impl<R: AppRepository> Cmd<R> for DeleteCmd {
     fn execute(self: Box<Self>, service: &mut TaskService<R>) -> Result<(), TaskServiceError> {
         service.delete_task(self.id)
     }
