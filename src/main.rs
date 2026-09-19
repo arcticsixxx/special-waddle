@@ -27,3 +27,24 @@ async fn main() {
         handler::handle_cli(action, &mut service);
     }
 }
+
+// use special_waddle::tui::app::TuiApp;
+// use special_waddle::tui::ui;
+// use special_waddle::{app, storage};
+
+// fn main() {
+//     let file_repo = storage::file::FileTaskRepository::new("storage.json");
+//     let service =
+//         app::task_service::TaskService::new(file_repo).expect("Failed to create task service");
+//     let state = TuiApp {
+//         tasks: service.tasks().unwrap(),
+//         active_task: service.active_task().unwrap(),
+//         should_exit: false,
+//     };
+
+//     ratatui::run(|terminal| {
+//         while !state.should_exit {
+//             terminal.draw(|frame| ui::render(frame, &state)).unwrap();
+//         }
+//     })
+// }

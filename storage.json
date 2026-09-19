@@ -1,0 +1,23 @@
+{
+  "tasks": [
+    {
+      "id": 2,
+      "title": "Add Ratatui Tui",
+      "description": "_",
+      "status": "Todo"
+    },
+    {
+      "id": 3,
+      "title": "One more task",
+      "description": "",
+      "status": "Todo"
+    },
+    {
+      "id": 4,
+      "title": "Yet another task",
+      "description": "",
+      "status": "Todo"
+    }
+  ],
+  "active_task": 2
+}
