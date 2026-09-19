@@ -1,29 +1,27 @@
-mod domain;
-mod parser;
-mod storage;
-
-use std::path::PathBuf;
+use special_waddle::{app, parser, storage};
 
 use tokio::sync::mpsc;
 
-use crate::storage::file::FileTaskRepository;
-
 #[tokio::main]
 async fn main() {
+    let file_repo = storage::file::FileTaskRepository::new("storage.json");
+    let mut service =
+        app::task_service::TaskService::new(file_repo).expect("Failed to create task service");
+
     let (tx, mut rx) = mpsc::channel(32);
 
     tokio::spawn(async move {
         loop {
-            match parser::parser::input() {
+            match parser::parser::input::<storage::file::FileTaskRepository>() {
                 Ok(cmd) => tx.send(cmd).await.unwrap(),
                 Err(e) => println!("Error occured {}", e),
             }
         }
     });
 
-    while let Some(mut cmd) = rx.recv().await {
-        let mut file_repo = FileTaskRepository::new(PathBuf::from("/tmp/xyz"));
-
-        cmd.execute(&mut file_repo);
+    while let Some(cmd) = rx.recv().await {
+        if let Err(e) = cmd.execute(&mut service) {
+            println!("Command failed: {}", e);
+        }
     }
 }
