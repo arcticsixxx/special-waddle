@@ -9,5 +9,7 @@ fn main() {
     let mut service = TaskService::new(file_repo).expect("Failed to create task service");
     let mut tui_app = TuiApp::new(&mut service);
 
-    tui_app.run();
+    let mut terminal = ratatui::init();
+    tui_app.run(&mut terminal);
+    ratatui::restore();
 }

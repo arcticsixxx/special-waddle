@@ -1,3 +1,5 @@
+use ratatui::DefaultTerminal;
+
 use crate::{
     app::task_service::TaskService,
     domain::Task,
@@ -33,21 +35,23 @@ impl<'a, R: AppRepository> TuiApp<'a, R> {
         }
     }
 
-    pub fn run(&mut self) {
-        ratatui::run(|terminal| {
-            while !self.should_exit {
-                terminal.draw(|frame| self.ui.render(frame, self)).unwrap();
-                match self.ui.process_key_events() {
-                    Action::None => {}
-                    Action::Submit => self.submit_input(),
-                    Action::Exit => self.should_exit = true,
+    pub fn run(&mut self, terminal: &mut DefaultTerminal) {
+        while !self.should_exit {
+            terminal
+                .draw(|frame| self.ui.render(frame, &self.tasks, &self.active_task))
+                .unwrap();
+            match self.ui.process_key_events() {
+                Action::None => {}
+                Action::Submit => {
+                    if self.ui.error_str.is_some() {
+                        self.ui.error_str = None;
+                        continue;
+                    }
+                    self.submit_input();
                 }
+                Action::Exit => self.should_exit = true,
             }
-        });
-    }
-
-    fn show_error(&mut self, error: &str) {
-        self.ui.show_error(error);
+        }
     }
 
     pub fn submit_input(&mut self) {
@@ -57,7 +61,7 @@ impl<'a, R: AppRepository> TuiApp<'a, R> {
                 self.ui.input_field.submit_input();
             }
             Err(error) => {
-                self.show_error(&error.to_string());
+                self.ui.error_str = Some(error.to_string());
                 self.ui.input_field.submit_input();
             }
         };
