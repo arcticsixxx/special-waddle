@@ -1,87 +1,65 @@
-use crate::domain::Task;
+use crate::{
+    app::task_service::TaskService,
+    domain::Task,
+    parser::{self, handler::handle_cli},
+    storage::app_repository::AppRepository,
+    tui::ui::{Action, Ui},
+};
 
-pub enum InputMode {
-    Normal,
-    Editing,
-}
+pub struct TuiApp<'a, R: AppRepository> {
+    // model
+    task_service: &'a mut TaskService<R>,
 
-pub struct UserInput {
-    pub input: String,
-    pub character_index: usize,
-    pub input_mode: InputMode,
-}
-
-pub enum Direction {
-    Left,
-    Right,
-}
-
-impl UserInput {
-    pub fn new() -> Self {
-        Self {
-            input: String::new(),
-            character_index: 0,
-            input_mode: InputMode::Normal,
-        }
-    }
-
-    pub fn move_cursor(&mut self, direction: Direction) {
-        match direction {
-            Direction::Left => {
-                if self.character_index > 0 {
-                    self.character_index -= 1;
-                }
-            }
-            Direction::Right => {
-                if self.character_index < self.input.len() {
-                    self.character_index += 1;
-                }
-            }
-        }
-    }
-
-    pub fn enter_char(&mut self, c: char) {
-        let index = self.byte_index();
-        self.input.insert(index, c);
-        self.move_cursor(Direction::Right);
-    }
-
-    fn byte_index(&self) -> usize {
-        self.input
-            .char_indices()
-            .map(|(i, _)| i)
-            .nth(self.character_index)
-            .unwrap_or(self.input.len())
-    }
-
-    pub fn delete_char(&mut self) {
-        // nothing to delete
-        if self.character_index == 0 {
-            return;
-        }
-
-        let byte_idx = self
-            .input
-            .char_indices()
-            .nth(self.character_index - 1)
-            .map(|(i, _)| i)
-            .unwrap();
-
-        self.input.remove(byte_idx);
-        self.move_cursor(Direction::Left);
-    }
-
-    pub fn submit_input(&mut self) {
-        self.input.clear();
-        self.character_index = 0;
-    }
-}
-
-pub struct TuiApp {
     pub tasks: Vec<Task>,
     pub active_task: Option<Task>,
 
-    pub user_input: UserInput,
-
+    // logic
     pub should_exit: bool,
+
+    // view
+    ui: Ui,
+}
+
+impl<'a, R: AppRepository> TuiApp<'a, R> {
+    pub fn new(service: &'a mut TaskService<R>) -> Self {
+        let tasks = service.tasks().unwrap();
+        let active_task = service.active_task().unwrap();
+        Self {
+            task_service: service,
+            tasks,
+            active_task,
+            ui: Ui::new(),
+            should_exit: false,
+        }
+    }
+
+    pub fn run(&mut self) {
+        ratatui::run(|terminal| {
+            while !self.should_exit {
+                terminal.draw(|frame| self.ui.render(frame, self)).unwrap();
+                match self.ui.process_key_events() {
+                    Action::None => {}
+                    Action::Submit => self.submit_input(),
+                    Action::Exit => self.should_exit = true,
+                }
+            }
+        });
+    }
+
+    fn show_error(&mut self, error: &str) {
+        self.ui.show_error(error);
+    }
+
+    pub fn submit_input(&mut self) {
+        match parser::parser::process_input(&self.ui.input_field.input) {
+            Ok(action) => {
+                handle_cli::<R>(action, &mut self.task_service);
+                self.ui.input_field.submit_input();
+            }
+            Err(error) => {
+                self.show_error(&error.to_string());
+                self.ui.input_field.submit_input();
+            }
+        };
+    }
 }
