@@ -21,15 +21,10 @@ pub enum CliQuery {
     Active,
 }
 
-pub fn input<R>() -> Result<CliAction<R>, Box<dyn Error + Sync + Send>>
+pub fn process_input<R>(input: &String) -> Result<CliAction<R>, Box<dyn Error + Sync + Send>>
 where
     R: AppRepository,
 {
-    use std::io::stdin;
-    let mut input = String::new();
-
-    stdin().read_line(&mut input)?;
-
     match input {
         _ if input.contains("task create") => {
             let task = process_task_create()?;
@@ -57,9 +52,6 @@ where
         _ if input.contains("task list") => Ok(CliAction::Query(CliQuery::List)),
         _ if input.contains("task active") => Ok(CliAction::Query(CliQuery::Active)),
 
-        _ => Err(Box::new(io::Error::new(
-            io::ErrorKind::Other,
-            "unknown command",
-        ))),
+        _ => Err(io::Error::new(io::ErrorKind::Other, "unknown command"))?,
     }
 }
