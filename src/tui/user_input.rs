@@ -1,3 +1,5 @@
+use ratatui::widgets::{Block, Paragraph, Widget};
+
 pub enum InputMode {
     Normal,
     Editing,
@@ -72,5 +74,22 @@ impl UserInput {
     pub fn submit_input(&mut self) {
         self.input.clear();
         self.character_index = 0;
+    }
+}
+
+impl Widget for &UserInput {
+    fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer)
+    where
+        Self: Sized,
+    {
+        let input = Paragraph::new(self.input.as_str())
+            .style(match self.input_mode {
+                InputMode::Normal => ratatui::style::Style::default(),
+                InputMode::Editing => {
+                    ratatui::style::Style::default().fg(ratatui::style::Color::Yellow)
+                }
+            })
+            .block(Block::bordered());
+        input.render(area, buf);
     }
 }

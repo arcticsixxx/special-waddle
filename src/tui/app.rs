@@ -5,7 +5,10 @@ use crate::{
     domain::Task,
     parser::{self, handler::handle_cli},
     storage::app_repository::AppRepository,
-    tui::ui::{Action, Ui},
+    tui::{
+        popup::Popup,
+        ui::{Action, Ui},
+    },
 };
 
 pub struct TuiApp<'a, R: AppRepository> {
@@ -43,8 +46,8 @@ impl<'a, R: AppRepository> TuiApp<'a, R> {
             match self.ui.process_key_events() {
                 Action::None => {}
                 Action::Submit => {
-                    if self.ui.error_str.is_some() {
-                        self.ui.error_str = None;
+                    if self.ui.popup.is_some() {
+                        self.ui.popup = None;
                         continue;
                     }
                     self.submit_input();
@@ -61,7 +64,7 @@ impl<'a, R: AppRepository> TuiApp<'a, R> {
                 self.ui.input_field.submit_input();
             }
             Err(error) => {
-                self.ui.error_str = Some(error.to_string());
+                self.ui.popup = Some(Popup::error(error.to_string()));
                 self.ui.input_field.submit_input();
             }
         };
